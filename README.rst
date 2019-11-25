@@ -30,6 +30,7 @@ It also requires a transcriptome annotation (.fasta file - e.g. ensembl's *.cdna
 Installation
 ------------
 .. code-block:: console
+
         git clone https://github.com/betsig/how_are_we_stranded_here.git
         pip install how_are_we_stranded_here
 
@@ -48,6 +49,7 @@ Output
 check_strandedness will print to console the results of infer_experiment.py (http://rseqc.sourceforge.net/#infer-experiment-py), along with an interpretation.
 
 .. code-block:: console
+
         checking strandedness
         Reading reference gene model stranded_test_WT_yeast_rep1_1_val_1_1/Saccharomyces_cerevisiae.R64-1-1.98.bed ... Done
         Loading SAM/BAM file ...  Total 20000 usable reads were sampled
