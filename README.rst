@@ -18,16 +18,17 @@ RSeQC
 
 Installation
 ------------
-
-
+.. code-block:: console
+        git clone https://github.com/betsig/how_are_we_stranded_here.git
+        pip install how_are_we_stranded_here
 
 Usage
 ------------
-For basic usage, run check_strandedness.py with a gtf transcript annotation, transcripts fasta file and fastq read files from one sample.
+For basic usage, run check_strandedness with a gtf transcript annotation, transcripts fasta file and fastq read files from one sample.
 
 .. code-block:: console
 
-        check_strandedness.py --gtf Yeast.gtf --transcripts Yeast_cdna.fasta --reads_1 Sample_A_1.fq.gz --reads_2 Sample_A_2.fq.gz
+        check_strandedness --gtf Yeast.gtf --transcripts Yeast_cdna.fasta --reads_1 Sample_A_1.fq.gz --reads_2 Sample_A_2.fq.gz
 
 How it Works
 ------------
