@@ -1,0 +1,5 @@
+[console_scripts]
+check_strandedness = how_are_we_stranded_here.check_strandedness:main
+gff32gtf = how_are_we_stranded_here.gff32gtf:main
+gtf2bed = how_are_we_stranded_here.gtf2bed:main
+

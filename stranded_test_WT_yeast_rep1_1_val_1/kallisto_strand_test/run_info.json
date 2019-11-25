@@ -1,0 +1,13 @@
+{
+	"n_targets": 6612,
+	"n_bootstraps": 0,
+	"n_processed": 0,
+	"n_pseudoaligned": 0,
+	"n_unique": 0,
+	"p_pseudoaligned": 0.0,
+	"p_unique": 0.0,
+	"kallisto_version": "0.46.0",
+	"index_version": 10,
+	"start_time": "Mon Nov 25 14:24:40 2019",
+	"call": "kallisto quant -i /Users/143470/UTS_HPC/how_are_we_stranded_here/kallisto_index -o stranded_test_WT_yeast_rep1_1_val_1/kallisto_strand_test --genomebam --gtf /Users/143470/Downloads/Saccharomyces_cerevisiae.R64-1-1.98.gtf stranded_test_WT_yeast_rep1_1_val_1/WT_yeast_rep1_1_val_1_sample.fq stranded_test_WT_yeast_rep1_1_val_1/WT_yeast_rep1_2_val_2_sample.fq"
+}
