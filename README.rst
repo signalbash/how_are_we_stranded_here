@@ -70,6 +70,6 @@ check_strandedness.py runs a series of commands to check which direction reads a
 
 It first creates a kallisto index (or uses a pre-made index) of your organisms transcriptome.
 
-It then maps a small subset of reads (default 2 million) to the transcriptome, and uses kallisto's --genomebam argument to project pseudoalignments to genome sorted BAM file.
+It then maps a small subset of reads (default 200000) to the transcriptome, and uses kallisto's --genomebam argument to project pseudoalignments to genome sorted BAM file.
 
 It finally runs RSeQC's infer_experiment.py to check which direction reads from the first and second pairs are aligned in relation to the transcript strand, and provides output with the likely strandedness of your data.

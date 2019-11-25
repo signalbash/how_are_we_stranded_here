@@ -10,7 +10,7 @@ def main():
     parser = argparse.ArgumentParser(description='Check if fastq files are stranded')
     parser.add_argument('-g', '--gtf', type=str, help='Genome annotation GTF file', required = True)
     parser.add_argument('-fa', '--transcripts', type=str, help='.fasta file with transcript sequences')
-    parser.add_argument('-n', '--nreads', type=int, help='number of reads to sample', default = 2000000)
+    parser.add_argument('-n', '--nreads', type=int, help='number of reads to sample', default = 200000)
     parser.add_argument('-r1', '--reads_1', type=str, help='fastq.gz file (R1)', required = True)
     parser.add_argument('-r2', '--reads_2', type=str, help='fastq.gz file (R2)', required = True)
     parser.add_argument('-k', '--kallisto_index', type=str, help='name of kallisto index (will build under this name if file not found)', default = 'kallisto_index')
