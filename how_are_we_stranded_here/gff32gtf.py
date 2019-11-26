@@ -48,17 +48,17 @@ def main():
 
     # find gene_id
     gff3['gene_id'] = ''
-    gff3.loc[gff3.type=='gene','gene_id'] = gff3.loc[gff3.type=='gene','attributes'].str.split("ID=gene:").str[1].str.split(";").str[0]
-    gff3.loc[gff3.type=='transcript','gene_id'] = gff3.loc[gff3.type=='transcript','attributes'].str.split("Parent=gene:").str[1].str.split(";").str[0]
+    gff3.loc[gff3.type=='gene','gene_id'] = gff3.loc[gff3.type=='gene','attributes'].str.split("ID=").str[1].str.split(";").str[0]
+    gff3.loc[gff3.type=='transcript','gene_id'] = gff3.loc[gff3.type=='transcript','attributes'].str.split("Parent=").str[1].str.split(";").str[0]
 
     # find transcript_id
     gff3['transcript_id'] = ''
-    gff3.loc[gff3.type=='transcript','transcript_id'] = gff3.loc[gff3.type=='transcript','attributes'].str.split("ID=transcript:").str[1].str.split(";").str[0]
-    gff3.loc[gff3.type=='exon','transcript_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("Parent=transcript:").str[1].str.split(";").str[0]
+    gff3.loc[gff3.type=='transcript','transcript_id'] = gff3.loc[gff3.type=='transcript','attributes'].str.split("ID=").str[1].str.split(";").str[0]
+    gff3.loc[gff3.type=='exon','transcript_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("Parent=").str[1].str.split(";").str[0]
 
     # find exon_id
     gff3['exon_id'] = ''
-    gff3.loc[gff3.type=='exon','exon_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("Name=").str[1].str.split(";").str[0]
+    gff3.loc[gff3.type=='exon','exon_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("ID=").str[1].str.split(";").str[0]
 
     # to find gene_id for exons, copy gene_id from parent transcript
     transcript_ids = gff3.copy()
