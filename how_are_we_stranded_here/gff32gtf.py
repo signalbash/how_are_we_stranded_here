@@ -37,14 +37,18 @@ def main():
     gff3.columns = ['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
 
     # remove rows that are chromosomes, or CDS/UTR annotations. We don't need these ATM
-    gff3 = gff3[~gff3.type.isin(['CDS', 'chromosome', 'five_prime_utr', 'three_prime_utr'])]
+    gff3 = gff3[~gff3.type.isin(['CDS', 'cds', 'chromosome', 'five_prime_utr', 'three_prime_utr', 'five_prime_UTR', 'three_prime_UTR'])]
 
     # what does the attributes col start with?
     starts_with = gff3.attributes.str.split(":").str[0]
 
     # replace any non-standard (i.e. noncoding transcripts) with gene/transcript
     gff3.loc[(starts_with == 'ID=gene'),'type'] = 'gene'
+    gff3.loc[gff3.type.str.contains('gene'),'type'] = 'gene'
+
     gff3.loc[(starts_with == 'ID=transcript'),'type'] = 'transcript'
+    gff3.loc[gff3.type.str.contains('RNA'),'type'] = 'transcript'
+    gff3.loc[gff3.type.str.contains('exon'),'type'] = 'exon'
 
     # find gene_id
     gff3['gene_id'] = ''
@@ -58,7 +62,19 @@ def main():
 
     # find exon_id
     gff3['exon_id'] = ''
-    gff3.loc[gff3.type=='exon','exon_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("ID=").str[1].str.split(";").str[0]
+    # check if ID= or Name= or exon_id=
+    replace_with_exon_id = sum(gff3.loc[gff3.type=='exon','attributes'].str.contains('exon_id='))
+    replace_with_Name = sum(gff3.loc[gff3.type=='exon','attributes'].str.contains('Name='))
+    replace_with_ID = sum(gff3.loc[gff3.type=='exon','attributes'].str.contains('ID='))
+
+    if replace_with_exon_id == len(gff3.loc[gff3.type=='exon','attributes']):
+        gff3.loc[gff3.type=='exon','exon_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("exon_id=").str[1].str.split(";").str[0]
+    elif replace_with_Name == len(gff3.loc[gff3.type=='exon','attributes']):
+        gff3.loc[gff3.type=='exon','exon_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("Name=").str[1].str.split(";").str[0]
+    elif replace_with_ID == len(gff3.loc[gff3.type=='exon','attributes']):
+        gff3.loc[gff3.type=='exon','exon_id'] = gff3.loc[gff3.type=='exon','attributes'].str.split("ID=").str[1].str.split(";").str[0]
+    else:
+        gff3.loc[gff3.type=='exon','exon_id'] = gff3.loc[gff3.type=='exon','attributes']
 
     # to find gene_id for exons, copy gene_id from parent transcript
     transcript_ids = gff3.copy()
