@@ -130,7 +130,7 @@ def main():
     if(is_gz_file(reads_2)):
         cmd = 'zcat < ' + reads_2 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
     else:
-        cmd = 'head ' + reads_2 + ' -n ' + str(n_reads * 4) + ' > ' + reads_1_sample
+        cmd = 'head ' + reads_2 + ' -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
     subprocess.call(cmd, shell=True)
 
     # align with kallisto
