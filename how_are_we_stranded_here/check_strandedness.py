@@ -5,7 +5,11 @@ import argparse
 import os
 import sys
 import subprocess
+import binascii
 
+def is_gz_file(filepath):
+    with open(filepath, 'rb') as test_f:
+        return binascii.hexlify(test_f.read(2)) == b'1f8b'
 def main():
     parser = argparse.ArgumentParser(description='Check if fastq files are stranded')
     parser.add_argument('-g', '--gtf', type=str, help='Genome annotation GTF file', required = True)
@@ -112,13 +116,21 @@ def main():
     print('creating fastq files with first ' + str(n_reads) + ' reads')
     reads_1_sample = test_folder + '/' + os.path.basename(reads_1).replace('.fastq' ,'').replace('.fq' ,'').replace('.gz' ,'') + '_sample.fq'
     reads_2_sample = test_folder + '/' + os.path.basename(reads_2).replace('.fastq' ,'').replace('.fq' ,'').replace('.gz' ,'') + '_sample.fq'
-    cmd = 'zcat < ' + reads_1 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_1_sample
+    # check if the fasta is gzipped
+    if(is_gz_file(reads_1)):
+        cmd = 'zcat < ' + reads_1 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_1_sample
+    else:
+        cmd = 'head ' reads_1 + ' -n ' + str(n_reads * 4) + ' > ' + reads_1_sample
     if print_cmds:
         print('running command: ' + cmd)
     subprocess.call(cmd, shell=True)
     if print_cmds:
         print('running command: ' + cmd)
-    cmd = 'zcat < ' + reads_2 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
+    # check if the fasta is gzipped
+    if(is_gz_file(reads_2)):
+        cmd = 'zcat < ' + reads_2 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
+    else:
+        cmd = 'head ' reads_2 + ' -n ' + str(n_reads * 4) + ' > ' + reads_1_sample
     subprocess.call(cmd, shell=True)
 
     # align with kallisto
