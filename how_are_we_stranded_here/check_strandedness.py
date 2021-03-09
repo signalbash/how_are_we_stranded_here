@@ -6,6 +6,7 @@ import os
 import sys
 import subprocess
 import binascii
+import re
 
 def is_gz_file(filepath):
     with open(filepath, 'rb') as test_f:
@@ -39,6 +40,23 @@ def main():
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE).communicate()
         return(cmd_result)
+
+    # check that fasta sequence names match bed names
+    def check_bed_in_fa(bed_filename, fasta):
+        """checks that bed transcript ids match (fuzzy on version numbers) fasta header ids (before space)"""
+        cmd = "head " + bed_filename + " | awk '{print $4}' "
+        bed_id = run_command(cmd)[0]
+        bed_id = bed_id.decode("utf-8").splitlines()
+
+        fa_headers_equal = []
+        for i in range(len(bed_id)):
+            cmd = 'grep ">" ' + fasta + ' | grep "' + bed_id[i] + '"'
+            #print('running command: ' + cmd)
+            fa_header = run_command(cmd)[0].decode('utf-8')
+            fa_headers_equal.append(re.sub("[.][0-9]*", "", fa_header.split(" ")[0].replace(">", "")) == bed_id[i] or fa_header.split(" ")[0].replace(">", "") == bed_id[i])
+
+        return sum(fa_headers_equal) > 0
+
 
     check_gtf2bed = run_command(cmd = 'gtf2bed --help')[1] == b''
     if not check_gtf2bed:
@@ -75,8 +93,6 @@ def main():
         os.mkdir(test_folder)
     print("Results stored in: " + test_folder)
 
-    #gtf ='/Users/143470/Downloads/Saccharomyces_cerevisiae.R64-1-1.98.gff'
-
     # convert gff to gtf if required
     gtf_extension = os.path.splitext(gtf)[1]
 
@@ -92,6 +108,7 @@ def main():
         gtf_filename = gtf
 
     # Run gtf2bed
+
     bed_filename = test_folder + '/' + os.path.basename(gtf).replace(gtf_extension, '.bed')
     cmd = 'gtf2bed --gtf ' + gtf_filename  + ' --bed ' + bed_filename
     print('converting gtf to bed')
@@ -103,15 +120,32 @@ def main():
     if os.path.exists(kallisto_index_name):
         print('using ' + kallisto_index_name + ' as kallisto index')
     else:
+        print('Checking if fasta headers and bed file transcript_ids match...')
+        check_bed = check_bed_in_fa(bed_filename, fasta)
+        if not check_bed:
+            print("Can't find transcript ids from " + fasta + " in " + bed_filename)
+            print("Trying to converting fasta header format to match transcript ids to the BED file...")
+            cmd = "sed 's/[|]/ /g' " + fasta + " > " + test_folder + "/transcripts.fa"
+            if print_cmds:
+                print('running command: ' + cmd)
+            subprocess.call(cmd, shell=True)
+            fasta = test_folder + "/transcripts.fa"
+            check_bed_converted = check_bed_in_fa(bed_filename, fasta)
+            if not check_bed_converted:
+                subprocess.call("rm -f " + fasta, shell=True)
+                sys.exit("Can't find any of the first 10 BED transcript_ids in fasta file... Check that these match")
+        else:
+            print("OK!")
+
         cmd = 'kallisto index -i ' + kallisto_index_name  + ' ' + fasta
         print('generating kallisto index')
         if print_cmds:
             print('running command: ' + cmd)
         subprocess.call(cmd, shell=True)
 
-    # take subset of reads
-    #reads_1 = "/Users/143470/UTS_HPC/SRR1957703_1.fastq.gz"
-    #reads_2 = "/Users/143470/UTS_HPC/SRR1957703_2.fastq.gz"
+        if not check_bed:
+            cmd = "rm -f " + fasta
+            subprocess.call(cmd, shell=True)
 
     print('creating fastq files with first ' + str(n_reads) + ' reads')
     reads_1_sample = test_folder + '/' + os.path.basename(reads_1).replace('.fastq' ,'').replace('.fq' ,'').replace('.gz' ,'') + '_sample.fq'
