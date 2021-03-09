@@ -2,6 +2,9 @@
 how_are_we_stranded_here
 ========================
 
+.. image:: https://img.shields.io/pypi/v/how_are_we_stranded_here.svg
+        :target: https://pypi.python.org/pypi/how_are_we_stranded_here
+
 Python package for testing strandedness of RNA-Seq fastq files
 
 
@@ -28,7 +31,6 @@ Installation
 ------------
 .. code-block:: console
 
-        git clone https://github.com/betsig/how_are_we_stranded_here.git
         pip install how_are_we_stranded_here
 
 
