@@ -2,10 +2,6 @@
 how_are_we_stranded_here
 ========================
 
-.. image:: https://img.shields.io/pypi/v/how_are_we_stranded_here.svg
-        :target: https://pypi.python.org/pypi/how_are_we_stranded_here
-
-
 Python package for testing strandedness of RNA-Seq fastq files
 
 
@@ -18,14 +14,14 @@ Requirements
 ------------
 how_are_we_stranded_here requires the following packages be installed:
 
-kallisto >= 0.44.0
+kallisto == 0.44.x
 
 python >= 3.6.0
 
 RSeQC
 
-It also requires a transcriptome annotation (.fasta file - e.g. ensembl's *.cdna.fasta, or a prebuilt kallisto index), and a corresponding gtf (or GFF3!).
-
+It also requires a transcriptome annotation (.fasta file - e.g. ensembl's *.cdna.fasta, or a prebuilt kallisto index), and a corresponding gtf.
+Note: Sometimes pseudoalignments will not work with newer versions of kallisto. If this is an issue, we suggest downgrading to 0.44.0.
 
 Installation
 ------------
@@ -55,9 +51,9 @@ check_strandedness will print to console the results of infer_experiment.py (htt
         Loading SAM/BAM file ...  Total 20000 usable reads were sampled
         This is PairEnd Data
         Fraction of reads failed to determine: 0.0595
-        Fraction of reads explained by "1++,1--,2+-,2-+": 0.0073
-        Fraction of reads explained by "1+-,1-+,2++,2--": 0.9332
-        Over 75% of reads explained by "1+-,1-+,2++,2--"
+        Fraction of reads explained by "1++,1--,2+-,2-+": 0.0073 (0.8% of explainable reads)
+        Fraction of reads explained by "1+-,1-+,2++,2--": 0.9332 (99.2% of explainable reads)
+        Over 90% of reads explained by "1+-,1-+,2++,2--"
         Data is likely RF/fr-firststrand
 
 
