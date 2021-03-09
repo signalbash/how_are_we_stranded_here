@@ -20,8 +20,9 @@ python >= 3.6.0
 
 RSeQC
 
-It also requires a transcriptome annotation (.fasta file - e.g. ensembl's *.cdna.fasta, or a prebuilt kallisto index), and a corresponding gtf.
-Note: Sometimes pseudoalignments will not work with newer versions of kallisto. If this is an issue, we suggest downgrading to 0.44.0.
+It also requires a transcriptome annotation (.fasta file - e.g. ensembl's .cdna.fasta, or a prebuilt kallisto index), and a corresponding gtf.
+
+Sometimes pseudoalignments will not work with newer versions of kallisto. If this is an issue, we suggest downgrading to 0.44.0.
 
 Installation
 ------------
