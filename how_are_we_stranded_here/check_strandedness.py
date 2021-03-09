@@ -150,18 +150,30 @@ def main():
 
     result = pd.read_csv(test_folder + '/' + 'strandedness_check.txt', sep="\n", header=None)
 
-    for i in range(4):
-        print(result.iloc[i,0])
+    failed = float(result.iloc[1,0].replace('Fraction of reads failed to determine: ', ''))
+    fwd = float(result.iloc[2,0].replace('Fraction of reads explained by "1++,1--,2+-,2-+": ', ''))
+    rev = float(result.iloc[3,0].replace('Fraction of reads explained by "1+-,1-+,2++,2--": ', ''))
+    fwd_percent = fwd/(fwd+rev)
+    rev_percent = rev/(fwd+rev)
+
+    print(result.iloc[0,0])
+    print(result.iloc[1,0])
+    print(result.iloc[2,0] + " (" + str(round(fwd_percent*100, 1)) + "% of explainable reads)")
+    print(result.iloc[3,0] + " (" + str(round(rev_percent*100, 1)) + "% of explainable reads)")
+
 
     if float(result.iloc[1,0].replace('Fraction of reads failed to determine: ', '')) > 0.50:
         print('Failed to determine strandedness of > 50% of reads.')
         print('If this is unexpected, try running again with a higher --nreads value')
-    if float(result.iloc[2,0].replace('Fraction of reads explained by "1++,1--,2+-,2-+": ', '')) > 0.75:
-        print('Over 75% of reads explained by "1++,1--,2+-,2-+"')
+    if fwd_percent > 0.9:
+        print('Over 90% of reads explained by "1++,1--,2+-,2-+"')
         print('Data is likely FR/fr-secondstrand')
-    elif float(result.iloc[3,0].replace('Fraction of reads explained by "1+-,1-+,2++,2--": ', '')) > 0.75:
-        print('Over 75% of reads explained by "1+-,1-+,2++,2--"')
+    elif rev_percent > 0.9:
+        print('Over 90% of reads explained by "1+-,1-+,2++,2--"')
         print('Data is likely RF/fr-firststrand')
-    else:
-        print('Less than 75% of reads explained by either category')
+    elif max(fwd_percent, rev_percent) < 0.6:
+        print('Under 60% of reads explained by one direction')
         print('Data is likely unstranded')
+    else:
+        print('Data does not fall into a likely stranded (max percent explained > 0.9) or unstranded layout (max percent explained < 0.6)')
+        print('Please check your data for low quality and contaminating reads before proceeding')
