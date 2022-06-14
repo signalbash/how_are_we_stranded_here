@@ -182,7 +182,7 @@ def main():
         print('running command: ' + cmd)
     subprocess.call(cmd, shell=True)
 
-    result = pd.read_csv(test_folder + '/' + 'strandedness_check.txt', sep="\n", header=None)
+    result = pd.read_csv(test_folder + '/' + 'strandedness_check.txt', sep="\r\n", header=None, engine='python')
 
     failed = float(result.iloc[1,0].replace('Fraction of reads failed to determine: ', ''))
     fwd = float(result.iloc[2,0].replace('Fraction of reads explained by "1++,1--,2+-,2-+": ', ''))
