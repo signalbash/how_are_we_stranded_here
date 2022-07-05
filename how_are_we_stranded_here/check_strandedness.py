@@ -7,6 +7,8 @@ import sys
 import subprocess
 import binascii
 import re
+from statistics import median
+from statistics import stdev
 
 def is_gz_file(filepath):
     with open(filepath, 'rb') as test_f:
@@ -17,7 +19,7 @@ def main():
     parser.add_argument('-fa', '--transcripts', type=str, help='.fasta file with transcript sequences')
     parser.add_argument('-n', '--nreads', type=int, help='number of reads to sample', default = 200000)
     parser.add_argument('-r1', '--reads_1', type=str, help='fastq.gz file (R1)', required = True)
-    parser.add_argument('-r2', '--reads_2', type=str, help='fastq.gz file (R2)', required = True)
+    parser.add_argument('-r2', '--reads_2', type=str, help='fastq.gz file (R2)')
     parser.add_argument('-k', '--kallisto_index', type=str, help='name of kallisto index (will build under this name if file not found)', default = 'kallisto_index')
     parser.add_argument('-p', '--print_commands', action='store_true', help='Print bash commands as they occur?')
 
@@ -79,6 +81,11 @@ def main():
     if not check_RSeQC:
         sys.exit("infer_experiment.py (RSeQC) is not found in PATH. Please install from http://rseqc.sourceforge.net/#installation")
 
+    if reads_2 is None:
+        print("--reads_2 / -r2 was not set... running in single strand mode.")
+        single_strand = True
+    else:
+        single_strand = False
 
     # make a test_folder
     test_folder = 'stranded_test_' + os.path.basename(reads_1).replace('.fastq' ,'').replace('.fq' ,'').replace('.gz' ,'')
@@ -150,7 +157,8 @@ def main():
 
     print('creating fastq files with first ' + str(n_reads) + ' reads')
     reads_1_sample = test_folder + '/' + os.path.basename(reads_1).replace('.fastq' ,'').replace('.fq' ,'').replace('.gz' ,'') + '_sample.fq'
-    reads_2_sample = test_folder + '/' + os.path.basename(reads_2).replace('.fastq' ,'').replace('.fq' ,'').replace('.gz' ,'') + '_sample.fq'
+    if not single_strand:
+        reads_2_sample = test_folder + '/' + os.path.basename(reads_2).replace('.fastq' ,'').replace('.fq' ,'').replace('.gz' ,'') + '_sample.fq'
     # check if the fasta is gzipped
     if(is_gz_file(reads_1)):
         cmd = 'zcat < ' + reads_1 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_1_sample
@@ -159,18 +167,37 @@ def main():
     if print_cmds:
         print('running command: ' + cmd)
     subprocess.call(cmd, shell=True)
-    if print_cmds:
-        print('running command: ' + cmd)
+
     # check if the fasta is gzipped
-    if(is_gz_file(reads_2)):
-        cmd = 'zcat < ' + reads_2 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
-    else:
-        cmd = 'head ' + reads_2 + ' -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
-    subprocess.call(cmd, shell=True)
+    if not single_strand:
+        if(is_gz_file(reads_2)):
+            cmd = 'zcat < ' + reads_2 + ' | head -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
+        else:
+            cmd = 'head ' + reads_2 + ' -n ' + str(n_reads * 4) + ' > ' + reads_2_sample
+        subprocess.call(cmd, shell=True)
+        if print_cmds:
+            print('running command: ' + cmd)
+
+    # check mean/sd read length
+    if single_strand:
+        step_size = 4
+        max_reads = step_size * 10000
+        read_lengths = []
+        with open(reads_1_sample) as fq_lines:
+            for line_no, line in enumerate(fq_lines):
+                if line_no >= max_reads: break
+                if line_no % step_size == 1:
+                    read_lengths.append(len(line.rstrip()))
+        read_len_median_ss = median(read_lengths)
+        read_len_sd_ss = stdev(read_lengths)
+        if read_len_sd_ss == 0: read_len_sd_ss = 1
 
     # align with kallisto
     print('quantifying with kallisto')
-    cmd = 'kallisto quant -i  ' + kallisto_index_name + '  -o ' + test_folder + '/' + 'kallisto_strand_test --genomebam --gtf ' + gtf_filename + ' ' + reads_1_sample + ' ' + reads_2_sample
+    if single_strand:
+        cmd = 'kallisto quant -i  ' + kallisto_index_name + '  -o ' + test_folder + '/' + 'kallisto_strand_test --single -l ' + str(read_len_median_ss) + ' -s ' + str(read_len_sd_ss) + ' --genomebam --gtf ' + gtf_filename + ' ' + reads_1_sample
+    else:
+        cmd = 'kallisto quant -i  ' + kallisto_index_name + '  -o ' + test_folder + '/' + 'kallisto_strand_test --genomebam --gtf ' + gtf_filename + ' ' + reads_1_sample + ' ' + reads_2_sample
     if print_cmds:
         print('running command: ' + cmd)
     subprocess.call(cmd, shell=True)
@@ -186,8 +213,12 @@ def main():
     result = pd.read_csv(test_folder + '/' + 'strandedness_check.txt', sep="\r\n", header=None, engine='python')
 
     failed = float(result.iloc[1,0].replace('Fraction of reads failed to determine: ', ''))
-    fwd = float(result.iloc[2,0].replace('Fraction of reads explained by "1++,1--,2+-,2-+": ', ''))
-    rev = float(result.iloc[3,0].replace('Fraction of reads explained by "1+-,1-+,2++,2--": ', ''))
+    if single_strand:
+        fwd = float(result.iloc[2,0].replace('Fraction of reads explained by "++,--": ', ''))
+        rev = float(result.iloc[3,0].replace('Fraction of reads explained by "+-,-+": ', ''))
+    else:
+        fwd = float(result.iloc[2,0].replace('Fraction of reads explained by "1++,1--,2+-,2-+": ', ''))
+        rev = float(result.iloc[3,0].replace('Fraction of reads explained by "1+-,1-+,2++,2--": ', ''))
     fwd_percent = fwd/(fwd+rev)
     rev_percent = rev/(fwd+rev)
 
@@ -201,11 +232,19 @@ def main():
         print('Failed to determine strandedness of > 50% of reads.')
         print('If this is unexpected, try running again with a higher --nreads value')
     if fwd_percent > 0.9:
-        print('Over 90% of reads explained by "1++,1--,2+-,2-+"')
-        print('Data is likely FR/fr-secondstrand')
+        if single_strand:
+            print('Over 90% of reads explained by "++,--"')
+            print('Data is likely FR/fr-stranded')
+        else:
+            print('Over 90% of reads explained by "1++,1--,2+-,2-+"')
+            print('Data is likely FR/fr-secondstrand')
     elif rev_percent > 0.9:
-        print('Over 90% of reads explained by "1+-,1-+,2++,2--"')
-        print('Data is likely RF/fr-firststrand')
+        if single_strand:
+            print('Over 90% of reads explained by "+-,-+"')
+            print('Data is likely RF/rf-stranded')
+        else:
+            print('Over 90% of reads explained by "1+-,1-+,2++,2--"')
+            print('Data is likely RF/fr-firststrand')
     elif max(fwd_percent, rev_percent) < 0.6:
         print('Under 60% of reads explained by one direction')
         print('Data is likely unstranded')
