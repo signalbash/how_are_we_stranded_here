@@ -52,7 +52,8 @@ def main():
         for i in range(len(bed_id)):
             cmd = 'grep ">" ' + fasta + ' | grep "' + bed_id[i] + '"'
             #print('running command: ' + cmd)
-            fa_header = run_command(cmd)[0].decode('utf-8')
+            # strip off spaces/newlines
+            fa_header = run_command(cmd)[0].decode('utf-8').strip()
             fa_headers_equal.append(re.sub("[.][0-9]*", "", fa_header.split(" ")[0].replace(">", "")) == bed_id[i] or fa_header.split(" ")[0].replace(">", "") == bed_id[i])
 
         return sum(fa_headers_equal) > 0
