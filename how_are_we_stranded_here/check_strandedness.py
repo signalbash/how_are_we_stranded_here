@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import csv
 import argparse
 import os
@@ -210,25 +209,27 @@ def main():
         print('running command: ' + cmd)
     subprocess.call(cmd, shell=True)
 
-    result = pd.read_csv(test_folder + '/' + 'strandedness_check.txt', sep="\r\n", header=None, engine='python')
+    with open(test_folder + '/' + 'strandedness_check.txt', 'r') as f:
+        # reading non-empty lines of the file
+        result = list(filter(None, (line.rstrip() for line in f)))
 
-    failed = float(result.iloc[1,0].replace('Fraction of reads failed to determine: ', ''))
+    failed = float(result[1].replace('Fraction of reads failed to determine: ', ''))
     if single_strand:
-        fwd = float(result.iloc[2,0].replace('Fraction of reads explained by "++,--": ', ''))
-        rev = float(result.iloc[3,0].replace('Fraction of reads explained by "+-,-+": ', ''))
+        fwd = float(result[2].replace('Fraction of reads explained by "++,--": ', ''))
+        rev = float(result[3].replace('Fraction of reads explained by "+-,-+": ', ''))
     else:
-        fwd = float(result.iloc[2,0].replace('Fraction of reads explained by "1++,1--,2+-,2-+": ', ''))
-        rev = float(result.iloc[3,0].replace('Fraction of reads explained by "1+-,1-+,2++,2--": ', ''))
+        fwd = float(result[2].replace('Fraction of reads explained by "1++,1--,2+-,2-+": ', ''))
+        rev = float(result[3].replace('Fraction of reads explained by "1+-,1-+,2++,2--": ', ''))
     fwd_percent = fwd/(fwd+rev)
     rev_percent = rev/(fwd+rev)
 
-    print(result.iloc[0,0])
-    print(result.iloc[1,0])
-    print(result.iloc[2,0] + " (" + str(round(fwd_percent*100, 1)) + "% of explainable reads)")
-    print(result.iloc[3,0] + " (" + str(round(rev_percent*100, 1)) + "% of explainable reads)")
+    print(result[0])
+    print(result[1])
+    print(result[2] + " (" + str(round(fwd_percent*100, 1)) + "% of explainable reads)")
+    print(result[3] + " (" + str(round(rev_percent*100, 1)) + "% of explainable reads)")
 
 
-    if float(result.iloc[1,0].replace('Fraction of reads failed to determine: ', '')) > 0.50:
+    if float(result[1].replace('Fraction of reads failed to determine: ', '')) > 0.50:
         print('Failed to determine strandedness of > 50% of reads.')
         print('If this is unexpected, try running again with a higher --nreads value')
     if fwd_percent > 0.9:
