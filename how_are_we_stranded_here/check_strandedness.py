@@ -210,7 +210,7 @@ def main():
         print('running command: ' + cmd)
     subprocess.call(cmd, shell=True)
 
-    result = pd.read_csv(test_folder + '/' + 'strandedness_check.txt', sep="\r\n", header=None, engine='python')
+    result = pd.read_csv(test_folder + '/' + 'strandedness_check.txt', sep="\r\t", header=None, engine='python')
 
     failed = float(result.iloc[1,0].replace('Fraction of reads failed to determine: ', ''))
     if single_strand:
